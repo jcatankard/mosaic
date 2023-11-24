@@ -1,5 +1,7 @@
 # mosaic
 
+[mosaic.streamlit.app](https://mosaic.streamlit.app/)
+
 Streamlit app to create a photomosaic.
 
 Tiles can fitted one of two ways:
