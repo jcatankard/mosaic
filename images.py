@@ -1,6 +1,6 @@
 from urllib.request import urlopen
+from typing import Optional, Union
 from numpy.typing import NDArray
-from typing import Optional
 from shape import Shape
 from os import listdir
 from PIL import Image
@@ -18,7 +18,7 @@ def create_greyscale_arrays(tile_shape: Shape) -> NDArray[np.uint8]:
     return np.array([arrays[i] * values[i] for i in range(N_DUMMY_IMAGES)], dtype=np.uint8)
 
 
-def tiles_as_arrays(tile_shape: Shape, src: Optional[str | list[bytes]] = None) -> NDArray[np.uint8]:
+def tiles_as_arrays(tile_shape: Shape, src: Optional[Union[str, list[bytes]]] = None) -> NDArray[np.uint8]:
     """
     :param tile_shape: shape of individual tiles
     :param src: is list of bytes or a string to a folder or None
@@ -57,7 +57,7 @@ def resize(img: Image, tile_height: int, n_pixels: int) -> Image:
     return img.resize(size=tuple(size.astype(np.int32)))
 
 
-def preprocess(tile_height: int, n_pixels: int, src: Optional[str | bytes] = None) -> Image:
+def preprocess(tile_height: int, n_pixels: int, src: Optional[Union[str, bytes]] = None) -> Image:
     if (src is None) | isinstance(src, str):
         img_src = urlopen(EXAMPLE_URL)
     elif isinstance(src, bytes):

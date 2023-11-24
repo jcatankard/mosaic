@@ -1,22 +1,18 @@
+from typing import Optional, Union
 from numpy.typing import NDArray
-from typing import Optional
-import numpy as np
-
 from shape import Shape
 from fit import fit
+import numpy as np
 import arrays
 import images
 
 
 def create(n_target_pixels: int,
            tile_height: int,
-           target_src: Optional[str | bytes] = None,
-           tiles_src: Optional[str | list[bytes]] = None,
+           target_src: Optional[Union[str, bytes]] = None,
+           tiles_src: Optional[Union[str, list[bytes]]] = None,
            by_pixel: bool = True
            ) -> NDArray:
-    """
-
-    """
     target = images.preprocess(src=target_src, n_pixels=n_target_pixels, tile_height=tile_height)
 
     tile_shape = Shape(tile_height, tile_height, images.N_COLOURS)
