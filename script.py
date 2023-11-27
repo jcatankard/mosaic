@@ -11,7 +11,6 @@ if __name__ == '__main__':
     results_array = mosaic.create(n_target_pixels,
                                   tile_height,
                                   target_src=target_src,
-                                  tiles_src=folder,
-                                  by_pixel=False
+                                  tiles_src=folder
                                   )
     Image.fromarray(results_array).show()

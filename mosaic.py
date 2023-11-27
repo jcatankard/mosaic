@@ -10,8 +10,7 @@ import images
 def create(n_target_pixels: int,
            tile_height: int,
            target_src: Optional[Union[str, bytes]] = None,
-           tiles_src: Optional[Union[str, list[bytes]]] = None,
-           by_pixel: bool = True
+           tiles_src: Optional[Union[str, list[bytes]]] = None
            ) -> NDArray:
     target = images.preprocess(src=target_src, n_pixels=n_target_pixels, tile_height=tile_height)
 
@@ -23,6 +22,6 @@ def create(n_target_pixels: int,
 
     tile_arrays = images.tiles_as_arrays(tile_shape, tiles_src)
 
-    best_comparison = fit(target_array.astype(np.uint8), tile_arrays.astype(np.uint8), by_pixel=by_pixel)
+    best_comparison = fit(target_array.astype(np.uint8), tile_arrays.astype(np.uint8))
     results_array = tile_arrays[best_comparison]
     return arrays.rollup(results_array, tile_shape, output_shape)

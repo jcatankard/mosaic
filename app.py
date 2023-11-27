@@ -52,13 +52,6 @@ def select_pixel_variables():
     target_size = st.slider('Select output size', 1, 100, 14, help=help_text)
     st.session_state['target_pixels'] = target_size * 10 ** 5
 
-    help_text = """
-    By pixel: the detail in the tiles match the details in the larger image.
-    By tile average: less detail but better colour approximation.
-    """
-    type_choice = st.selectbox('Tile choice type', options=['By pixel', 'By tile average'], index=1, help=help_text)
-    st.session_state['by_pixel'] = type_choice == 'By pixel'
-
 
 def create():
     if st.button('Create', type='primary'):
@@ -66,8 +59,7 @@ def create():
             st.session_state['target_pixels'],
             st.session_state['tile_height'],
             st.session_state['target_src'],
-            st.session_state['tile_src'],
-            st.session_state['by_pixel']
+            st.session_state['tile_src']
         )
 
 
