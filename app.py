@@ -55,12 +55,13 @@ def select_pixel_variables():
 
 def create():
     if st.button('Create', type='primary'):
-        st.session_state['results_array'] = mosaic.create(
+        args = mosaic.prepare(
             st.session_state['target_pixels'],
             st.session_state['tile_height'],
             st.session_state['target_src'],
             st.session_state['tile_src']
         )
+        st.session_state['results_array'] = mosaic.create(*args)
 
 
 def app():

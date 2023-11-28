@@ -18,7 +18,7 @@ def create_greyscale_arrays(tile_shape: Shape) -> NDArray[np.uint8]:
     return np.array([arrays[i] * values[i] for i in range(N_DUMMY_IMAGES)], dtype=np.uint8)
 
 
-def tiles_as_arrays(tile_shape: Shape, src: Optional[Union[str, list[bytes]]] = None) -> NDArray[np.uint8]:
+def tile_images_as_arrays(tile_shape: Shape, src: Optional[Union[str, list[bytes]]] = None) -> NDArray[np.uint8]:
     """
     :param tile_shape: shape of individual tiles
     :param src: is list of bytes or a string to a folder or None
@@ -32,15 +32,19 @@ def tiles_as_arrays(tile_shape: Shape, src: Optional[Union[str, list[bytes]]] = 
         files = [src + '/' + p for p in folder]
     else:
         files = src
-    array = np.empty(shape=(len(files), *tile_shape), dtype=np.uint8)
-    pixels = tile_shape.height * tile_shape.height
-    for i, f in enumerate(files):
-        img = preprocess(tile_shape.height, pixels, src=f)
-        array[i] = np.asarray(img, dtype=np.uint8)
-    return array
+
+    n_pixels = tile_shape.height * tile_shape.height
+    return np.array([preprocess(tile_height=tile_shape.height, n_pixels=n_pixels, src=f) for f in files])
 
 
-def covert_mode(img: Image) -> Image:
+def preprocess(tile_height: int, n_pixels: int, src: Optional[Union[str, bytes]] = None) -> NDArray[np.uint8]:
+    img = open_image(src)
+    img = convert_mode(img)
+    img = resize(img, tile_height, n_pixels)
+    return np.asarray(img, dtype=np.uint8)
+
+
+def convert_mode(img: Image) -> Image:
     return img.convert('RGB') if img.mode != 'RGB' else img
 
 
@@ -57,13 +61,11 @@ def resize(img: Image, tile_height: int, n_pixels: int) -> Image:
     return img.resize(size=tuple(size.astype(np.int32)))
 
 
-def preprocess(tile_height: int, n_pixels: int, src: Optional[Union[str, bytes]] = None) -> Image:
+def open_image(src: Optional[Union[str, bytes]] = None) -> Image:
     if (src is None) | isinstance(src, str):
         img_src = urlopen(EXAMPLE_URL)
     elif isinstance(src, bytes):
         img_src = io.BytesIO(src)
     else:
         img_src = src
-    img = Image.open(img_src)
-    img = covert_mode(img)
-    return resize(img, tile_height, n_pixels)
+    return Image.open(img_src)

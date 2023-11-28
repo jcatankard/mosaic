@@ -1,11 +1,12 @@
 from urllib.request import urlopen
+from mosaic import rgb_mean
 from shape import Shape
 from PIL import Image
-from fit import fit
 import numpy as np
 import unittest
 import images
 import arrays
+import fit
 
 
 class TestApp(unittest.TestCase):
@@ -53,7 +54,8 @@ class TestApp(unittest.TestCase):
         target_array = arrays.unroll(target_array, tile_shape)
 
         tile_arrays = images.create_greyscale_arrays(tile_shape)
-        best_comparison = fit(target_array.astype(np.uint8), tile_arrays.astype(np.uint8), by_pixel=True)
+        comparisons = fit.evaluate(rgb_mean(target_array), rgb_mean(tile_arrays))
+        best_comparison = fit.best_fit(comparisons)
 
         # check that all values are the same
         self.assertEqual(np.unique(best_comparison).size, 1)
