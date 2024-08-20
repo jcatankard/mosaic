@@ -10,7 +10,7 @@ def unroll(array: NDArray, tile_shape: Shape) -> NDArray:
     :return: 4d array (n_tiles, tile_section_height, tile_section_height, N_COLOURS)
     """
     count = 0
-    n_tiles = array.size // np.prod(tile_shape)
+    n_tiles = array.size // tile_shape.total_size
     new_array = np.empty(shape=(n_tiles, *tile_shape), dtype=np.uint8)
     for i in range(0, array.shape[0], tile_shape.height):
         for j in range(0, array.shape[1], tile_shape.height):
