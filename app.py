@@ -14,14 +14,14 @@ def array_to_bytes(array: NDArray) -> bytes:
     return byte_values
 
 
-def upload_target_image():
+def upload_target_image() -> None:
     help_text = 'Upload a png or jpg file'
     uploaded = st.file_uploader('Upload image', accept_multiple_files=False, type=['png', 'jpg'], help=help_text)
     st.session_state['target_src'] = uploaded.read() if uploaded is not None else EXAMPLE_URL
     st.image(st.session_state['target_src'])
 
 
-def upload_tile_images():
+def upload_tile_images() -> None:
     help_text = 'Upload png or jpg files'
     with st.form('tile-images-form', clear_on_submit=True):
         uploaded = st.file_uploader('Select images', accept_multiple_files=True, type=['png', 'jpg'], help=help_text)
@@ -34,7 +34,7 @@ def upload_tile_images():
         st.session_state['tile_src'] = None
 
 
-def sidebar():
+def sidebar() -> None:
     with st.sidebar:
         st.header('Upload images')
         tabs = st.tabs(['Main image', 'Tile images'])
@@ -44,7 +44,7 @@ def sidebar():
             upload_tile_images()
 
 
-def select_pixel_variables():
+def select_pixel_variables() -> None:
     help_text = 'Represents the number of pixels along the edge of each tile'
     st.session_state['tile_height'] = st.slider('Select tile size', 4, 32, 16, help=help_text)
 
@@ -53,7 +53,7 @@ def select_pixel_variables():
     st.session_state['target_pixels'] = target_size * 10 ** 5
 
 
-def create():
+def create() -> None:
     if st.button('Create', type='primary'):
         args = mosaic.prepare(
             st.session_state['target_pixels'],
@@ -64,7 +64,7 @@ def create():
         st.session_state['results_array'] = mosaic.create(*args)
 
 
-def app():
+def app() -> None:
     st.set_page_config(layout='centered', page_title='Mosaic', page_icon='📷')
     st.title('Mosaic')
     select_pixel_variables()
