@@ -27,9 +27,9 @@ def rollup(array: NDArray, tile_shape: Shape, new_array_shape: Shape) -> NDArray
     :return: array of dimensions new_array_shape
     """
     count = 0
-    new_array = np.empty(shape=new_array_shape, dtype=np.uint8)
-    for i in range(0, new_array_shape[0], tile_shape.height):
-        for j in range(0, new_array_shape[1], tile_shape.height):
+    new_array = np.empty(shape=new_array_shape.as_tuple(), dtype=np.uint8)
+    for i in range(0, new_array_shape.height, tile_shape.height):
+        for j in range(0, new_array_shape.width, tile_shape.height):
             new_array[i: i + tile_shape.height, j: j + tile_shape.height] = array[count]
             count += 1
     return new_array
