@@ -1,39 +1,40 @@
 from urllib.request import urlopen
-from mosaic import rgb_mean
+from mosaic import Mosaic
 from shape import Shape
 from PIL import Image
 import numpy as np
 import unittest
-import images
-import arrays
-import fit
+from image_handler import ImageHandler, EXAMPLE_URL
+from tile_handler import TileHandler
+from scoring import scoring
 
 
 class TestApp(unittest.TestCase):
-    img = Image.open(urlopen(images.EXAMPLE_URL))
 
     def test_resize(self):
         tile_height = np.random.randint(2, 33)
         n_pixels = np.random.randint(int(10e3), int(10e7))
 
-        new_img = images.resize(self.img, tile_height=tile_height, n_pixels=n_pixels)
+        ih = ImageHandler(tile_shape=Shape(tile_height, tile_height), n_pixels=n_pixels)
+
+        img = Image.open(urlopen(EXAMPLE_URL))
+        new_img = ih._resize(img)
 
         self.assertEqual(new_img.size[0] % tile_height, 0)
         self.assertEqual(new_img.size[1] % tile_height, 0)
 
-    def test_roll_unroll(self):
+    def test_unroll(self):
         tile_height = np.random.randint(2, 33)
         n_pixels = np.random.randint(int(10e3), int(10e7))
 
-        tile_shape = Shape(tile_height, tile_height, images.N_COLOURS)
+        ih = ImageHandler(tile_shape=Shape(tile_height, tile_height), n_pixels=n_pixels)
+        unrolled_array = ih.unroll_array()
 
-        new_img = images.resize(self.img, tile_height=tile_height, n_pixels=n_pixels)
-        array = np.asarray(new_img, dtype=np.uint8)
+        assert ih.array.size == unrolled_array.size
+        assert unrolled_array.shape[-3:] == ih.tile_shape.as_tuple()
 
-        unrolled_array = arrays.unroll(array, tile_shape)
-        rollback_array = arrays.rollup(unrolled_array, tile_shape, Shape(*array.shape))
-
-        np.testing.assert_array_equal(array, rollback_array)
+        np.testing.assert_array_equal(ih.array[:tile_height, :tile_height], unrolled_array[0])
+        np.testing.assert_array_equal(ih.array[-tile_height:, -tile_height:], unrolled_array[-1])
 
     def test_fit(self):
         """
@@ -44,18 +45,18 @@ class TestApp(unittest.TestCase):
         rgb_value = 255
 
         tile_height = np.random.randint(2, 33)
-        tile_shape = Shape(tile_height, tile_height, images.N_COLOURS)
+        tile_shape = Shape(tile_height, tile_height)
 
         n_vertical_tiles = np.random.randint(10, 100)
         n_horizontal_tiles = np.random.randint(10, 100)
-        shape = Shape(n_vertical_tiles * tile_height, n_horizontal_tiles * tile_height, images.N_COLOURS)
+        shape = Shape(n_vertical_tiles * tile_height, n_horizontal_tiles * tile_height)
 
-        target_array = np.ones(shape, dtype=np.uint8) * np.uint8(rgb_value)
-        target_array = arrays.unroll(target_array, tile_shape)
+        target_array = np.ones(shape.as_tuple(), dtype=np.uint8) * np.uint8(rgb_value)
+        target_array = target_array.reshape(-1, *tile_shape.as_tuple())
 
-        tile_arrays = images.create_greyscale_arrays(tile_shape)
-        comparisons = fit.evaluate(rgb_mean(target_array), rgb_mean(tile_arrays))
-        best_comparison = fit.best_fit(comparisons)
+        tile_arrays = TileHandler(tile_shape, None).array
+        comparisons = scoring(Mosaic.rgb_mean(target_array), Mosaic.rgb_mean(tile_arrays))
+        best_comparison = Mosaic.best_score(comparisons)
 
         # check that all values are the same
         self.assertEqual(np.unique(best_comparison).size, 1)
