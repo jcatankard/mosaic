@@ -1,8 +1,8 @@
-from images import EXAMPLE_URL
+from image_handler import EXAMPLE_URL
 from numpy.typing import NDArray
 import streamlit as st
 from PIL import Image
-import mosaic
+from mosaic import Mosaic
 import io
 
 
@@ -52,16 +52,21 @@ def select_pixel_variables() -> None:
     target_size = st.slider('Select output size', 1, 100, 14, help=help_text)
     st.session_state['target_pixels'] = target_size * 10 ** 5
 
+    help_text = 'Create more randomness to vary the images used in areas of similar colour'
+    st.session_state['noise'] = st.slider('Select noise', 0, 25, 0, help=help_text)
+
 
 def create() -> None:
     if st.button('Create', type='primary'):
-        args = mosaic.prepare(
+        mosaic = Mosaic(
             st.session_state['target_pixels'],
             st.session_state['tile_height'],
             st.session_state['target_src'],
-            st.session_state['tile_src']
+            st.session_state['tile_src'],
+            noise_level=st.session_state['noise']
         )
-        st.session_state['results_array'] = mosaic.create(*args)
+        mosaic.prepare()
+        st.session_state['results_array'] = mosaic.create()
 
 
 def app() -> None:

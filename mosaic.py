@@ -1,40 +1,57 @@
-from typing import Optional, Union
+from image_handler import ImageHandler
+from tile_handler import TileHandler
 from numpy.typing import NDArray
+from scoring import scoring
+from typing import Optional
 from shape import Shape
 import numpy as np
-import arrays
-import images
-import fit
 
 
-def prepare(n_target_pixels: int,
+class Mosaic:
+
+    def __init__(
+            self,
+            n_target_pixels: int,
             tile_height: int,
-            target_src: Optional[Union[str, bytes]] = None,
-            tiles_src: Optional[Union[str, list[bytes]]] = None
-            ) -> tuple[NDArray[np.uint8], NDArray[np.uint8], Shape, Shape]:
+            target_src: Optional[bytes] = None,
+            tiles_src: Optional[list[bytes]] = None,
+            noise_level: float = 0.
+    ) -> None:
+        """
+        :param n_target_pixels:
+        :param tile_height:
+        :param target_src:
+        :param tiles_src:
+        :param noise_level: value between 0 and 100
+        """
+        self.n_target_pixels = n_target_pixels
+        self.target_src = target_src
+        self.tiles_src = tiles_src
+        self.noise_level = noise_level / 100
+        self.tile_shape = Shape(tile_height, tile_height)
 
-    target_array = images.preprocess(tile_height=tile_height, n_pixels=n_target_pixels, src=target_src)
+        self.target_image: Optional[ImageHandler] = None
+        self.tile_images: Optional[TileHandler] = None
 
-    tile_shape = Shape(tile_height, tile_height, images.N_COLOURS)
-    output_shape = Shape(*target_array.shape)
+    def prepare(self) -> None:
+        self.target_image = ImageHandler(self.tile_shape, self.n_target_pixels, self.target_src)
+        self.tile_images = TileHandler(self.tile_shape, self.tiles_src)
 
-    target_array = arrays.unroll(target_array, tile_shape)
+    def create(self) -> NDArray:
+        target_rgb = self.rgb_mean(self.target_image.unroll_array())
+        tiles_rgb = self.rgb_mean(self.tile_images.array)
 
-    tile_arrays = images.tile_images_as_arrays(tile_shape, tiles_src)
-    return target_array, tile_arrays, tile_shape, output_shape
+        scores = scoring(target_rgb, tiles_rgb)
+        scores *= np.random.normal(loc=1., scale=self.noise_level, size=scores.shape)
+        best_scores = self.best_score(scores)
 
+        return self.tile_images.filter_and_rollup(best_scores, self.tile_shape, self.target_image.shape)
 
-def create(target_array: NDArray[np.uint8],
-           tile_arrays: NDArray[np.uint8],
-           tile_shape: Shape,
-           output_shape: Shape
-           ) -> NDArray:
-    comparisons = fit.evaluate(rgb_mean(target_array), rgb_mean(tile_arrays))
-    best_comparison = fit.best_fit(comparisons)
-    results_array = tile_arrays[best_comparison]
-    return arrays.rollup(results_array, tile_shape, output_shape)
+    @staticmethod
+    def best_score(scores: NDArray) -> NDArray:
+        return np.argmin(scores, axis=1)
 
-
-def rgb_mean(array: NDArray[np.uint8]) -> NDArray[np.float32]:
-    """Turns an array of multiple images/tiles and returns the average rgb values for each"""
-    return array.sum(axis=1).sum(axis=1) / (array.shape[1] * array.shape[1])
+    @staticmethod
+    def rgb_mean(array: NDArray[np.uint8]) -> NDArray[np.float32]:
+        """Takes an array of multiple images/tiles and returns the average rgb values for each"""
+        return array.sum(axis=1).sum(axis=1) / (array.shape[1] * array.shape[1])
