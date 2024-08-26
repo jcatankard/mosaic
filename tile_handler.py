@@ -22,7 +22,8 @@ class TileHandler:
         if self.src is None:
             return self._create_greyscale_arrays()
         n_pixels = self.tile_shape.height * self.tile_shape.height
-        return np.array([ImageHandler(self.tile_shape, n_pixels, f).array for f in self.src])
+        tiles = np.array([ImageHandler(self.tile_shape, n_pixels, f).array for f in self.src])
+        return np.unique(tiles, axis=0)
 
     def _create_greyscale_arrays(self) -> NDArray[np.uint8]:
         values = np.linspace(0, 255, N_DUMMY_IMAGES, dtype=np.uint8)
